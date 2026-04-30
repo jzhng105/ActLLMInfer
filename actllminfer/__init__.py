@@ -18,6 +18,7 @@ from .chat_models import (
     ChatAnthropic,
     ChatDeepSeek,
     ChatGLM,
+    ChatHuggingFace,
     ChatKimi,
     ChatMiniMax,
     ChatMoonshot,
@@ -75,6 +76,7 @@ __all__ = [
     "ChatGLM",
     "ChatMiniMax",
     "ChatAnthropic",
+    "ChatHuggingFace",
     # messages
     "BaseMessage",
     "SystemMessage",

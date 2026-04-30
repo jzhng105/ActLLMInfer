@@ -6,6 +6,7 @@ from .minimax import ChatMiniMax
 from .moonshot import ChatMoonshot, ChatKimi
 from .openai import ChatOpenAI
 from .zhipuai import ChatZhipuAI, ChatGLM
+from .huggingface import ChatHuggingFace
 
 __all__ = [
     "ChatOpenAI",
@@ -16,4 +17,5 @@ __all__ = [
     "ChatGLM",
     "ChatMiniMax",
     "ChatAnthropic",
+    "ChatHuggingFace",
 ]

@@ -12,7 +12,7 @@ Integrated LLM inference engine with a **LangChain-Core-style** interface. One s
 | DeepSeek | `ChatDeepSeek` | `deepseek-chat` | `DEEPSEEK_API_KEY` |
 | OpenAI | `ChatOpenAI` | `gpt-4o-mini` | `OPENAI_API_KEY` |
 | Anthropic | `ChatAnthropic` | `claude-sonnet-4-6` | `ANTHROPIC_API_KEY` |
-
+| Hugging Face | `ChatHuggingFace` | `Hythcliff/canadian-address-checker-on` | `HF_TOKEN` (or `HUGGINGFACEHUB_API_TOKEN`) |
 ## Install
 
 ```bash
@@ -46,7 +46,37 @@ llm = init_chat_model("glm-4-plus")                 # provider inferred
 llm = init_chat_model("deepseek-reasoner")          # provider inferred
 llm = init_chat_model("anthropic:claude-sonnet-4-6")
 llm = init_chat_model("abab6.5s-chat")              # MiniMax inferred
+llm = init_chat_model("hf:meta-llama/Llama-3.3-70B-Instruct")
 ```
+### Hugging Face
+
+`ChatHuggingFace` defaults to the **HF Inference Router**
+(`https://router.huggingface.co/v1/chat/completions`), which is
+OpenAI-compatible and dispatches to whichever provider currently serves the
+model id you pass.
+
+```python
+from actllminfer import ChatHuggingFace
+
+llm = ChatHuggingFace(model="Qwen/Qwen2.5-72B-Instruct")
+print(llm.invoke("Summarize the theory of relativity in one sentence.").content)
+```
+
+For a **dedicated Inference Endpoint**, a self-hosted **TGI** server, or any
+other OpenAI-compatible deployment, just point `base_url` at the `/v1` root:
+
+```python
+llm = ChatHuggingFace(
+    model="tgi",  # placeholder; the endpoint already targets a single model
+    base_url="https://my-endpoint.example.com/v1",
+)
+```
+
+The class accepts `HF_TOKEN` *or* the older `HUGGINGFACEHUB_API_TOKEN` env var.
+
+A worked example using `Hythcliff/canadian-address-checker-on` to validate a
+batch of Canadian addresses and parse a structured JSON response is in
+[`examples/canadian_address_checker.py`](examples/canadian_address_checker.py).
 
 ### Composable chains (LCEL-style)
 
@@ -122,7 +152,8 @@ actllminfer/
 │   ├── deepseek.py
 │   ├── zhipuai.py      # GLM
 │   ├── minimax.py
-│   └── anthropic.py    # Claude (different transport)
+|   ├── anthropic.py    # Claude (different transport)
+│   └── huggingface.py  # HF Inference Router / TGI / dedicated endpoints
 ├── factory.py          # init_chat_model("kimi:moonshot-v1-8k")
 └── exceptions.py
 ```

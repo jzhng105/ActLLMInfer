@@ -12,6 +12,7 @@ from actllminfer import (
     BaseCallbackHandler,
     ChatDeepSeek,
     ChatGLM,
+    ChatHuggingFace,
     ChatKimi,
     ChatMiniMax,
     ChatMoonshot,
@@ -106,6 +107,7 @@ def test_provider_default_endpoints(monkeypatch):
     monkeypatch.setenv("MINIMAX_API_KEY", "k")
     monkeypatch.setenv("OPENAI_API_KEY", "k")
     monkeypatch.setenv("ANTHROPIC_API_KEY", "k")
+    monkeypatch.setenv("HF_TOKEN", "k")
 
     assert ChatMoonshot()._chat_endpoint() == "https://api.moonshot.cn/v1/chat/completions"
     assert ChatDeepSeek()._chat_endpoint() == "https://api.deepseek.com/v1/chat/completions"
@@ -113,7 +115,7 @@ def test_provider_default_endpoints(monkeypatch):
     assert ChatMiniMax()._chat_endpoint() == "https://api.minimax.chat/v1/text/chatcompletion_v2"
     assert ChatOpenAI()._chat_endpoint() == "https://api.openai.com/v1/chat/completions"
     assert anthropic_module.ChatAnthropic()._endpoint() == "https://api.anthropic.com/v1/messages"
-
+    assert ChatHuggingFace()._chat_endpoint() == "https://router.huggingface.co/v1/chat/completions"
 
 # ---------------------------------------------------------------------------
 # OpenAI-compatible providers (one shared backend)
@@ -329,3 +331,68 @@ def test_factory_infers_minimax_provider(monkeypatch):
 def test_factory_unknown_model_requires_explicit_provider():
     with pytest.raises(ConfigurationError):
         init_chat_model("some-totally-unknown-model")
+
+# ---------------------------------------------------------------------------
+# Hugging Face
+# ---------------------------------------------------------------------------
+
+
+def test_huggingface_invoke_routes_to_hf_router(monkeypatch):
+    monkeypatch.setenv("HF_TOKEN", "hf-test")
+    monkeypatch.delenv("HUGGINGFACEHUB_API_TOKEN", raising=False)
+    recorder = _Recorder(_FakeResponse(200, _openai_response_body("hi from hf")))
+    monkeypatch.setattr(openai_compat.requests, "post", recorder)
+
+    llm = ChatHuggingFace(model="meta-llama/Llama-3.3-70B-Instruct")
+    msg = llm.invoke("hello")
+
+    sent = recorder.calls[0]
+    assert msg.content == "hi from hf"
+    assert sent["url"] == "https://router.huggingface.co/v1/chat/completions"
+    assert sent["headers"]["Authorization"] == "Bearer hf-test"
+    assert sent["json"]["model"] == "meta-llama/Llama-3.3-70B-Instruct"
+
+
+def test_huggingface_falls_back_to_legacy_token_env(monkeypatch):
+    monkeypatch.delenv("HF_TOKEN", raising=False)
+    monkeypatch.setenv("HUGGINGFACEHUB_API_TOKEN", "legacy-token")
+    recorder = _Recorder(_FakeResponse(200, _openai_response_body("ok")))
+    monkeypatch.setattr(openai_compat.requests, "post", recorder)
+
+    ChatHuggingFace().invoke("hi")
+    assert recorder.calls[0]["headers"]["Authorization"] == "Bearer legacy-token"
+
+
+def test_huggingface_missing_token_raises_configuration_error(monkeypatch):
+    monkeypatch.delenv("HF_TOKEN", raising=False)
+    monkeypatch.delenv("HUGGINGFACEHUB_API_TOKEN", raising=False)
+    with pytest.raises(ConfigurationError):
+        ChatHuggingFace()
+
+
+def test_huggingface_custom_base_url_for_dedicated_endpoint(monkeypatch):
+    """Pointing base_url at a TGI / dedicated Inference Endpoint just works."""
+    monkeypatch.setenv("HF_TOKEN", "k")
+    recorder = _Recorder(_FakeResponse(200, _openai_response_body("ok")))
+    monkeypatch.setattr(openai_compat.requests, "post", recorder)
+
+    llm = ChatHuggingFace(
+        model="tgi",
+        base_url="https://my-endpoint.example.com/v1",
+    )
+    llm.invoke("hi")
+    assert recorder.calls[0]["url"] == "https://my-endpoint.example.com/v1/chat/completions"
+
+
+def test_factory_huggingface_provider_prefix(monkeypatch):
+    monkeypatch.setenv("HF_TOKEN", "k")
+    llm = init_chat_model("huggingface:meta-llama/Llama-3.3-70B-Instruct")
+    assert isinstance(llm, ChatHuggingFace)
+    assert llm.model == "meta-llama/Llama-3.3-70B-Instruct"
+
+
+def test_factory_hf_short_prefix(monkeypatch):
+    monkeypatch.setenv("HF_TOKEN", "k")
+    llm = init_chat_model("hf:Qwen/Qwen2.5-72B-Instruct")
+    assert isinstance(llm, ChatHuggingFace)
+    assert llm.model == "Qwen/Qwen2.5-72B-Instruct"

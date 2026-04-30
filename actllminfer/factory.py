@@ -16,6 +16,7 @@ from typing import Any
 from .chat_models import (
     ChatAnthropic,
     ChatDeepSeek,
+    ChatHuggingFace,
     ChatMiniMax,
     ChatMoonshot,
     ChatOpenAI,
@@ -36,6 +37,8 @@ _PROVIDER_REGISTRY: dict[str, type[BaseChatModel]] = {
     "minimax": ChatMiniMax,
     "anthropic": ChatAnthropic,
     "claude": ChatAnthropic,
+    "huggingface": ChatHuggingFace,
+    "hf": ChatHuggingFace,
 }
 
 
