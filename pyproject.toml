@@ -9,7 +9,7 @@ description = "Integrated LLM inference engine with a LangChain-Core-style inter
 readme = "README.md"
 requires-python = ">=3.9"
 license = { file = "LICENSE" }
-authors = [{ name = "ActLLMInfer Contributors" }]
+authors = [{ name = "Juntao Zhang" }]
 keywords = ["llm", "inference", "kimi", "moonshot", "glm", "zhipuai", "minimax", "deepseek", "openai", "anthropic"]
 classifiers = [
     "Programming Language :: Python :: 3",
