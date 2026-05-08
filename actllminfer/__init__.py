@@ -22,6 +22,7 @@ from .chat_models import (
     ChatKimi,
     ChatMiniMax,
     ChatMoonshot,
+    ChatNVIDIA,
     ChatOpenAI,
     ChatZhipuAI,
 )
@@ -77,6 +78,7 @@ __all__ = [
     "ChatMiniMax",
     "ChatAnthropic",
     "ChatHuggingFace",
+    "ChatNVIDIA",
     # messages
     "BaseMessage",
     "SystemMessage",

@@ -7,6 +7,7 @@ Examples::
     init_chat_model("deepseek-reasoner", provider="deepseek", temperature=0)
     init_chat_model("openai:gpt-4o-mini")
     init_chat_model("anthropic:claude-sonnet-4-6")
+    init_chat_model("nvidia:meta/llama-3.3-70b-instruct")
 """
 
 from __future__ import annotations
@@ -19,6 +20,7 @@ from .chat_models import (
     ChatHuggingFace,
     ChatMiniMax,
     ChatMoonshot,
+    ChatNVIDIA,
     ChatOpenAI,
     ChatZhipuAI,
 )
@@ -39,6 +41,8 @@ _PROVIDER_REGISTRY: dict[str, type[BaseChatModel]] = {
     "claude": ChatAnthropic,
     "huggingface": ChatHuggingFace,
     "hf": ChatHuggingFace,
+    "nvidia": ChatNVIDIA,
+    "nim": ChatNVIDIA,
 }
 
 
@@ -55,6 +59,8 @@ _MODEL_PREFIX_HINTS: list[tuple[str, str]] = [
     ("o1", "openai"),
     ("o3", "openai"),
     ("o4", "openai"),
+    ("nvidia/", "nvidia"),
+    ("nemotron", "nvidia"),
 ]
 
 

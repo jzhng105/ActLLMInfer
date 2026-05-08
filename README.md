@@ -13,6 +13,7 @@ Integrated LLM inference engine with a **LangChain-Core-style** interface. One s
 | OpenAI | `ChatOpenAI` | `gpt-4o-mini` | `OPENAI_API_KEY` |
 | Anthropic | `ChatAnthropic` | `claude-sonnet-4-6` | `ANTHROPIC_API_KEY` |
 | Hugging Face | `ChatHuggingFace` | `Hythcliff/canadian-address-checker-on` | `HF_TOKEN` (or `HUGGINGFACEHUB_API_TOKEN`) |
+| NVIDIA NIM | `ChatNVIDIA` | `meta/llama-3.3-70b-instruct` | `NVIDIA_API_KEY` (or `NGC_API_KEY`) |
 ## Install
 
 ```bash
@@ -47,6 +48,7 @@ llm = init_chat_model("deepseek-reasoner")          # provider inferred
 llm = init_chat_model("anthropic:claude-sonnet-4-6")
 llm = init_chat_model("abab6.5s-chat")              # MiniMax inferred
 llm = init_chat_model("hf:meta-llama/Llama-3.3-70B-Instruct")
+llm = init_chat_model("nvidia:meta/llama-3.3-70b-instruct")
 ```
 ### Hugging Face
 
@@ -77,6 +79,31 @@ The class accepts `HF_TOKEN` *or* the older `HUGGINGFACEHUB_API_TOKEN` env var.
 A worked example using `Hythcliff/canadian-address-checker-on` to validate a
 batch of Canadian addresses and parse a structured JSON response is in
 [`examples/canadian_address_checker.py`](examples/canadian_address_checker.py).
+
+### NVIDIA NIM (free serverless inference)
+
+`ChatNVIDIA` targets NVIDIA's free OpenAI-compatible NIM endpoint at
+`https://integrate.api.nvidia.com/v1/chat/completions`. Grab a free
+`nvapi-...` key from [build.nvidia.com](https://build.nvidia.com/) and set
+`NVIDIA_API_KEY` (the legacy `NGC_API_KEY` is also accepted).
+
+```python
+from actllminfer import ChatNVIDIA
+
+llm = ChatNVIDIA(model="meta/llama-3.3-70b-instruct", temperature=0.2)
+print(llm.invoke("Summarize the theory of relativity in one sentence.").content)
+```
+
+The same key fans out to dozens of hosted models — Llama 3.x, Mixtral,
+Nemotron, Qwen, DeepSeek, Phi, Gemma, etc. To target a self-hosted NIM
+microservice instead, point `base_url` at any OpenAI-compatible `/v1` root:
+
+```python
+llm = ChatNVIDIA(
+    model="meta/llama-3.1-8b-instruct",
+    base_url="https://my-nim.example.com/v1",
+)
+```
 
 ### Composable chains (LCEL-style)
 
@@ -153,7 +180,8 @@ actllminfer/
 │   ├── zhipuai.py      # GLM
 │   ├── minimax.py
 |   ├── anthropic.py    # Claude (different transport)
-│   └── huggingface.py  # HF Inference Router / TGI / dedicated endpoints
+│   ├── huggingface.py  # HF Inference Router / TGI / dedicated endpoints
+│   └── nvidia.py       # NVIDIA NIM serverless / self-hosted
 ├── factory.py          # init_chat_model("kimi:moonshot-v1-8k")
 └── exceptions.py
 ```

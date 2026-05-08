@@ -16,6 +16,7 @@ from actllminfer import (
     ChatKimi,
     ChatMiniMax,
     ChatMoonshot,
+    ChatNVIDIA,
     ChatOpenAI,
     ChatPromptTemplate,
     ChatZhipuAI,
@@ -108,6 +109,7 @@ def test_provider_default_endpoints(monkeypatch):
     monkeypatch.setenv("OPENAI_API_KEY", "k")
     monkeypatch.setenv("ANTHROPIC_API_KEY", "k")
     monkeypatch.setenv("HF_TOKEN", "k")
+    monkeypatch.setenv("NVIDIA_API_KEY", "k")
 
     assert ChatMoonshot()._chat_endpoint() == "https://api.moonshot.cn/v1/chat/completions"
     assert ChatDeepSeek()._chat_endpoint() == "https://api.deepseek.com/v1/chat/completions"
@@ -116,6 +118,7 @@ def test_provider_default_endpoints(monkeypatch):
     assert ChatOpenAI()._chat_endpoint() == "https://api.openai.com/v1/chat/completions"
     assert anthropic_module.ChatAnthropic()._endpoint() == "https://api.anthropic.com/v1/messages"
     assert ChatHuggingFace()._chat_endpoint() == "https://router.huggingface.co/v1/chat/completions"
+    assert ChatNVIDIA()._chat_endpoint() == "https://integrate.api.nvidia.com/v1/chat/completions"
 
 # ---------------------------------------------------------------------------
 # OpenAI-compatible providers (one shared backend)
@@ -396,3 +399,79 @@ def test_factory_hf_short_prefix(monkeypatch):
     llm = init_chat_model("hf:Qwen/Qwen2.5-72B-Instruct")
     assert isinstance(llm, ChatHuggingFace)
     assert llm.model == "Qwen/Qwen2.5-72B-Instruct"
+
+
+# ---------------------------------------------------------------------------
+# NVIDIA serverless inference
+# ---------------------------------------------------------------------------
+
+
+def test_nvidia_invoke_routes_to_nim_endpoint(monkeypatch):
+    monkeypatch.setenv("NVIDIA_API_KEY", "nvapi-test")
+    monkeypatch.delenv("NGC_API_KEY", raising=False)
+    recorder = _Recorder(_FakeResponse(200, _openai_response_body("hi from nim")))
+    monkeypatch.setattr(openai_compat.requests, "post", recorder)
+
+    llm = ChatNVIDIA(model="meta/llama-3.3-70b-instruct", temperature=0.1)
+    msg = llm.invoke("hello")
+
+    sent = recorder.calls[0]
+    assert msg.content == "hi from nim"
+    assert sent["url"] == "https://integrate.api.nvidia.com/v1/chat/completions"
+    assert sent["headers"]["Authorization"] == "Bearer nvapi-test"
+    assert sent["json"]["model"] == "meta/llama-3.3-70b-instruct"
+    assert sent["json"]["temperature"] == 0.1
+
+
+def test_nvidia_falls_back_to_legacy_ngc_key(monkeypatch):
+    monkeypatch.delenv("NVIDIA_API_KEY", raising=False)
+    monkeypatch.setenv("NGC_API_KEY", "legacy-ngc")
+    recorder = _Recorder(_FakeResponse(200, _openai_response_body("ok")))
+    monkeypatch.setattr(openai_compat.requests, "post", recorder)
+
+    ChatNVIDIA().invoke("hi")
+    assert recorder.calls[0]["headers"]["Authorization"] == "Bearer legacy-ngc"
+
+
+def test_nvidia_missing_key_raises_configuration_error(monkeypatch):
+    monkeypatch.delenv("NVIDIA_API_KEY", raising=False)
+    monkeypatch.delenv("NGC_API_KEY", raising=False)
+    with pytest.raises(ConfigurationError):
+        ChatNVIDIA()
+
+
+def test_nvidia_custom_base_url(monkeypatch):
+    """Pointing base_url at a self-hosted NIM microservice keeps the same code path."""
+    monkeypatch.setenv("NVIDIA_API_KEY", "k")
+    recorder = _Recorder(_FakeResponse(200, _openai_response_body("ok")))
+    monkeypatch.setattr(openai_compat.requests, "post", recorder)
+
+    llm = ChatNVIDIA(model="meta/llama-3.1-8b-instruct", base_url="https://my-nim.example.com/v1")
+    llm.invoke("hi")
+    assert recorder.calls[0]["url"] == "https://my-nim.example.com/v1/chat/completions"
+
+
+def test_factory_nvidia_provider_prefix(monkeypatch):
+    monkeypatch.setenv("NVIDIA_API_KEY", "k")
+    llm = init_chat_model("nvidia:meta/llama-3.3-70b-instruct")
+    assert isinstance(llm, ChatNVIDIA)
+    assert llm.model == "meta/llama-3.3-70b-instruct"
+
+
+def test_factory_nim_short_prefix(monkeypatch):
+    monkeypatch.setenv("NVIDIA_API_KEY", "k")
+    llm = init_chat_model("nim:mistralai/mixtral-8x22b-instruct-v0.1")
+    assert isinstance(llm, ChatNVIDIA)
+    assert llm.model == "mistralai/mixtral-8x22b-instruct-v0.1"
+
+
+def test_factory_infers_nvidia_from_nemotron_prefix(monkeypatch):
+    monkeypatch.setenv("NVIDIA_API_KEY", "k")
+    assert isinstance(init_chat_model("nemotron-4-340b-instruct"), ChatNVIDIA)
+
+
+def test_factory_infers_nvidia_from_nvidia_namespace(monkeypatch):
+    monkeypatch.setenv("NVIDIA_API_KEY", "k")
+    llm = init_chat_model("nvidia/llama-3.1-nemotron-70b-instruct")
+    assert isinstance(llm, ChatNVIDIA)
+    assert llm.model == "nvidia/llama-3.1-nemotron-70b-instruct"
