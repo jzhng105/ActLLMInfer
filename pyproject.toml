@@ -5,12 +5,12 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "actllminfer"
 version = "0.1.0"
-description = "Integrated LLM inference engine with a LangChain-Core-style interface across Kimi, GLM, MiniMax, DeepSeek, OpenAI, and Anthropic."
+description = "Integrated LLM inference engine with a LangChain-Core-style interface across Kimi, GLM, MiniMax, DeepSeek, OpenAI, Anthropic, Hugging Face, and NVIDIA NIM."
 readme = "README.md"
 requires-python = ">=3.9"
 license = { file = "LICENSE" }
 authors = [{ name = "Juntao Zhang" }]
-keywords = ["llm", "inference", "kimi", "moonshot", "glm", "zhipuai", "minimax", "deepseek", "openai", "anthropic"]
+keywords = ["llm", "inference", "kimi", "moonshot", "glm", "zhipuai", "minimax", "deepseek", "openai", "anthropic", "huggingface", "nvidia", "nim"]
 classifiers = [
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
