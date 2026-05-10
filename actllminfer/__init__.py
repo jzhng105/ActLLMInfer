@@ -26,6 +26,7 @@ from .chat_models import (
     ChatOpenAI,
     ChatZhipuAI,
 )
+from .embeddings import BaseEmbeddings, DeepSeekEmbeddings, OpenAIEmbeddings, ZhipuAIEmbeddings
 from .exceptions import (
     APIConnectionError,
     APIError,
@@ -35,7 +36,7 @@ from .exceptions import (
     OutputParserError,
     RateLimitError,
 )
-from .factory import init_chat_model
+from .factory import init_chat_model, init_embedding_model
 from .language_models import BaseChatModel
 from .messages import (
     AIMessage,
@@ -66,8 +67,10 @@ __all__ = [
     "__version__",
     # factory
     "init_chat_model",
+    "init_embedding_model",
     # base
     "BaseChatModel",
+    "BaseEmbeddings",
     # provider classes
     "ChatOpenAI",
     "ChatMoonshot",
@@ -79,6 +82,9 @@ __all__ = [
     "ChatAnthropic",
     "ChatHuggingFace",
     "ChatNVIDIA",
+    "OpenAIEmbeddings",
+    "DeepSeekEmbeddings",
+    "ZhipuAIEmbeddings",
     # messages
     "BaseMessage",
     "SystemMessage",

@@ -24,6 +24,7 @@ from .chat_models import (
     ChatOpenAI,
     ChatZhipuAI,
 )
+from .embeddings import DeepSeekEmbeddings, OpenAIEmbeddings, ZhipuAIEmbeddings
 from .exceptions import ConfigurationError
 from .language_models.base import BaseChatModel
 
@@ -107,4 +108,36 @@ def init_chat_model(
     return cls(model=spec, **kwargs)
 
 
-__all__ = ["init_chat_model"]
+
+
+_EMBEDDING_PROVIDER_REGISTRY: dict[str, type] = {
+    "openai": OpenAIEmbeddings,
+    "deepseek": DeepSeekEmbeddings,
+    "zhipuai": ZhipuAIEmbeddings,
+    "zhipu": ZhipuAIEmbeddings,
+    "glm": ZhipuAIEmbeddings,
+}
+
+def init_embedding_model(model: str, *, provider: str | None = None, **kwargs: Any):
+    spec = model
+    if ":" in model and provider is None:
+        head, tail = model.split(":", 1)
+        if head.lower() in _EMBEDDING_PROVIDER_REGISTRY:
+            provider = head
+            spec = tail
+    if provider is None:
+        provider = _infer_provider(spec)
+    if provider is None:
+        raise ConfigurationError(
+            f"Could not infer embedding provider for model {model!r}. Pass provider= explicitly. "
+            f"Known providers: {sorted(set(_EMBEDDING_PROVIDER_REGISTRY))}"
+        )
+    cls = _EMBEDDING_PROVIDER_REGISTRY.get(provider.lower())
+    if cls is None:
+        raise ConfigurationError(
+            f"Unknown embedding provider {provider!r}. Known providers: {sorted(set(_EMBEDDING_PROVIDER_REGISTRY))}"
+        )
+    return cls(model=spec, **kwargs)
+
+
+__all__ = ["init_chat_model", "init_embedding_model"]
