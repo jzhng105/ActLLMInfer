@@ -59,6 +59,26 @@ from .output_parsers import (
 from .outputs import ChatGeneration, ChatGenerationChunk, ChatResult
 from .prompts import ChatPromptTemplate, MessagesPlaceholder, PromptTemplate
 from .runnables import Runnable, RunnableLambda, RunnablePassthrough, RunnableSequence
+from .unified import (
+    AsyncStreamIterator,
+    Choice,
+    Delta,
+    EmbeddingObject,
+    EmbeddingResponse,
+    Message,
+    ModelResponse,
+    Router,
+    StreamingChoice,
+    StreamingModelResponse,
+    Usage,
+    acompletion,
+    aembedding,
+    completion,
+    embedding,
+    reset_client_cache,
+    supported_chat_providers,
+    supported_embedding_providers,
+)
 from .utils import SecretStr
 
 __version__ = "0.1.0"
@@ -68,6 +88,25 @@ __all__ = [
     # factory
     "init_chat_model",
     "init_embedding_model",
+    # unified LiteLLM-style endpoint
+    "completion",
+    "acompletion",
+    "embedding",
+    "aembedding",
+    "Router",
+    "ModelResponse",
+    "StreamingModelResponse",
+    "Choice",
+    "StreamingChoice",
+    "Message",
+    "Delta",
+    "Usage",
+    "EmbeddingResponse",
+    "EmbeddingObject",
+    "AsyncStreamIterator",
+    "supported_chat_providers",
+    "supported_embedding_providers",
+    "reset_client_cache",
     # base
     "BaseChatModel",
     "BaseEmbeddings",

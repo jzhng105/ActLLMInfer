@@ -37,6 +37,69 @@ reply = llm.invoke([
 print(reply.content)
 ```
 
+### Unified `completion()` endpoint (LiteLLM-style)
+
+For callers that just want a single function with an OpenAI-shaped response,
+`completion()` dispatches across every supported provider via a
+`provider/model` string. Providers can also be addressed with the legacy
+`provider:model` separator, and known prefixes (`glm-`, `deepseek-`,
+`claude-`, `nemotron`, …) are inferred automatically.
+
+```python
+from actllminfer import completion
+
+resp = completion(
+    model="openai/gpt-4o-mini",
+    messages=[{"role": "user", "content": "Summarize relativity in one line."}],
+    temperature=0.2,
+)
+print(resp.choices[0].message.content)   # attribute access
+print(resp["choices"][0]["message"]["content"])  # dict access
+print(resp.usage["total_tokens"])
+```
+
+`stream=True` returns an iterator of OpenAI-shaped `chat.completion.chunk`
+objects:
+
+```python
+for chunk in completion(model="kimi/moonshot-v1-8k", messages="Tell me a joke", stream=True):
+    delta = chunk.choices[0].delta
+    if delta.get("content"):
+        print(delta.content, end="", flush=True)
+```
+
+Per-call generation knobs (`temperature`, `max_tokens`, `tools`,
+`response_format`, `seed`, `stop`, …) are forwarded to the provider.
+Constructor-time arguments (`api_key`, `base_url`, `organization`,
+`request_timeout`, `default_headers`, `extra_body`, …) build (and cache)
+the underlying client.
+
+An `embedding()` counterpart and `async` variants (`acompletion`,
+`aembedding`) are provided too:
+
+```python
+from actllminfer import embedding, acompletion
+
+vecs = embedding(model="openai/text-embedding-3-small", input=["hi", "there"])
+print(vecs.data[0].embedding[:4])
+
+resp = await acompletion(model="anthropic/claude-sonnet-4-6", messages="Hi")
+```
+
+A primary-with-fallbacks `Router` retries on transient errors so a
+rate-limited primary transparently falls through to the next provider:
+
+```python
+from actllminfer import Router
+
+router = Router([
+    "openai/gpt-4o-mini",
+    "kimi/moonshot-v1-8k",
+    "deepseek/deepseek-chat",
+])
+resp = router.completion(messages=[{"role": "user", "content": "Hi"}])
+```
+
 ### String spec via the factory
 
 ```python
