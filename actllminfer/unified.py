@@ -122,7 +122,7 @@ class EmbeddingResponse(_AttrDict):
 # ---------------------------------------------------------------------------
 # Model-string parsing
 # ---------------------------------------------------------------------------
-
+_NAMESPACED_MODEL_PROVIDERS: frozenset[str] = frozenset({"nvidia", "nim"})
 
 def _split_provider_and_model(spec: str) -> tuple[str | None, str]:
     """Pull ``provider`` off the front of ``provider/model`` or ``provider:model``.
@@ -135,8 +135,15 @@ def _split_provider_and_model(spec: str) -> tuple[str | None, str]:
     for sep in (":", "/"):
         if sep in spec:
             head, tail = spec.split(sep, 1)
-            if head.lower() in _PROVIDER_REGISTRY or head.lower() in _EMBEDDING_PROVIDER_REGISTRY:
-                return head.lower(), tail
+            head_lower = head.lower()
+            if head_lower in _PROVIDER_REGISTRY or head_lower in _EMBEDDING_PROVIDER_REGISTRY:
+                if (
+                    sep == "/"
+                    and head_lower in _NAMESPACED_MODEL_PROVIDERS
+                    and "/" not in tail
+                ):
+                    return None, spec
+            return head_lower, tail  
     return None, spec
 
 
