@@ -8,6 +8,7 @@ Examples::
     init_chat_model("openai:gpt-4o-mini")
     init_chat_model("anthropic:claude-sonnet-4-6")
     init_chat_model("nvidia:meta/llama-3.3-70b-instruct")
+    init_chat_model("nvidia_nim/nvidia/llama-3.1-nemotron-70b-instruct")
 """
 
 from __future__ import annotations
@@ -44,6 +45,10 @@ _PROVIDER_REGISTRY: dict[str, type[BaseChatModel]] = {
     "hf": ChatHuggingFace,
     "nvidia": ChatNVIDIA,
     "nim": ChatNVIDIA,
+    # LiteLLM convention; lets callers write e.g.
+    # ``nvidia_nim/nvidia/llama-3.1-nemotron-70b-instruct`` unambiguously,
+    # i.e. with both the provider prefix and the model's publisher namespace.
+    "nvidia_nim": ChatNVIDIA,
 }
 
 
@@ -60,6 +65,7 @@ _MODEL_PREFIX_HINTS: list[tuple[str, str]] = [
     ("o1", "openai"),
     ("o3", "openai"),
     ("o4", "openai"),
+    ("nvidia_nim/", "nvidia"),
     ("nvidia/", "nvidia"),
     ("nemotron", "nvidia"),
 ]

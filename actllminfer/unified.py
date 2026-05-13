@@ -124,6 +124,15 @@ class EmbeddingResponse(_AttrDict):
 # ---------------------------------------------------------------------------
 
 
+# Provider prefixes whose stripping conflicts with model ids that themselves
+# carry a publisher namespace (e.g. NVIDIA NIM uses ``meta/...``,
+# ``nvidia/...``, ``mistralai/...`` as the actual model id). Splitting
+# ``nvidia/llama-3.1-nemotron-70b-instruct`` naively yields
+# ``model="llama-3.1-nemotron-70b-instruct"`` and NIM 404s. For these heads
+# we only strip the prefix when the remaining model id retains a ``/``.
+_NAMESPACED_MODEL_PROVIDERS: frozenset[str] = frozenset({"nvidia", "nim"})
+
+
 def _split_provider_and_model(spec: str) -> tuple[str | None, str]:
     """Pull ``provider`` off the front of ``provider/model`` or ``provider:model``.
 
@@ -131,12 +140,30 @@ def _split_provider_and_model(spec: str) -> tuple[str | None, str]:
     but several model ids themselves contain ``/`` (``nvidia/llama-...``,
     ``meta-llama/Llama-3.3-70B-Instruct``), so the head is only treated as a
     provider when it appears in :data:`_PROVIDER_REGISTRY`.
+
+    Special case: NVIDIA NIM model ids *always* include a publisher namespace
+    (e.g. ``meta/llama-3.3-70b-instruct``, ``nvidia/llama-3.1-nemotron-70b-instruct``).
+    When the head is ``nvidia`` / ``nim`` and the tail has no further ``/``,
+    the head is the model id's publisher — not the provider prefix — so the
+    full spec is kept and the provider is inferred from the ``nvidia/`` /
+    ``nim/`` model-prefix hint.
     """
     for sep in (":", "/"):
         if sep in spec:
             head, tail = spec.split(sep, 1)
-            if head.lower() in _PROVIDER_REGISTRY or head.lower() in _EMBEDDING_PROVIDER_REGISTRY:
-                return head.lower(), tail
+            head_lower = head.lower()
+            if head_lower in _PROVIDER_REGISTRY or head_lower in _EMBEDDING_PROVIDER_REGISTRY:
+                if (
+                    sep == "/"
+                    and head_lower in _NAMESPACED_MODEL_PROVIDERS
+                    and "/" not in tail
+                ):
+                    # ``nvidia/<single-segment>`` — the head is the publisher
+                    # namespace, not the provider prefix. Fall through to
+                    # ``_infer_provider`` which maps the ``nvidia/`` hint to
+                    # the nvidia provider while keeping the full model id.
+                    return None, spec
+                return head_lower, tail
     return None, spec
 
 
