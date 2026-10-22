@@ -14,6 +14,11 @@ Examples::
     get_price("kimi:kimi-k2.5")      # same separators as completion()
     estimate_cost("openai/gpt-5-mini", prompt_tokens=1200, completion_tokens=300)
 
+Long-context pricing is all-or-nothing per request, as providers bill it:
+once the prompt crosses a tier's threshold (e.g. 200k tokens on Gemini 2.5
+Pro), every token in the request is billed at that tier's rates.
+:func:`estimate_cost` applies this; :meth:`ModelPrice.rates_for` exposes it.
+
 Models served through NVIDIA NIM or Hugging Face have no entry: neither
 publishes per-token list prices, so :func:`get_price` returns ``None``.
 """
@@ -44,6 +49,16 @@ _ALIASES = {
 
 
 @dataclass(frozen=True)
+class ContextTier:
+    """Rates for requests whose prompt exceeds `above_tokens`."""
+
+    above_tokens: int
+    input_per_mtok: float
+    output_per_mtok: float
+    cache_read_per_mtok: Optional[float] = None
+
+
+@dataclass(frozen=True)
 class ModelPrice:
     provider: str
     model: str
@@ -56,9 +71,26 @@ class ModelPrice:
     supports_vision: bool = False
     supports_reasoning: bool = False
     deprecation_date: Optional[str] = None
+    #: long-context tiers, ascending by threshold
+    context_tiers: tuple[ContextTier, ...] = ()
+    #: the provider bills a tier once the prompt *reaches* its threshold
+    #: (xAI) rather than exceeds it
+    threshold_inclusive: bool = False
     #: name of the ActLLMInfer chat class for this provider, or None when the
     #: price is a reference price for a provider ActLLMInfer cannot call
     client: Optional[str] = None
+
+    def rates_for(self, prompt_tokens: int) -> tuple[float, float, Optional[float]]:
+        """(input, output, cache-read) USD per Mtok for a request whose prompt
+        is `prompt_tokens` long, cached tokens included."""
+        rates = (self.input_per_mtok, self.output_per_mtok, self.cache_read_per_mtok)
+        for tier in self.context_tiers:
+            crossed = prompt_tokens > tier.above_tokens or (
+                self.threshold_inclusive and prompt_tokens == tier.above_tokens
+            )
+            if crossed:
+                rates = (tier.input_per_mtok, tier.output_per_mtok, tier.cache_read_per_mtok)
+        return rates
 
 
 @dataclass(frozen=True)
@@ -84,10 +116,17 @@ def _index(table: PriceTable) -> dict[tuple[str, str], ModelPrice]:
 
 
 def _parse(payload: dict[str, Any]) -> PriceTable:
-    clients = {name: spec.get("client") for name, spec in payload.get("providers", {}).items()}
-    fields = set(ModelPrice.__dataclass_fields__) - {"client"}
+    providers = payload.get("providers", {})
+    fields = set(ModelPrice.__dataclass_fields__) - {"client", "context_tiers", "threshold_inclusive"}
     models = tuple(
-        ModelPrice(**{k: v for k, v in m.items() if k in fields}, client=clients.get(m["provider"]))
+        ModelPrice(
+            **{k: v for k, v in m.items() if k in fields},
+            context_tiers=tuple(
+                ContextTier(**t) for t in sorted(m.get("context_tiers") or (), key=lambda t: t["above_tokens"])
+            ),
+            threshold_inclusive=bool(providers.get(m["provider"], {}).get("threshold_inclusive")),
+            client=providers.get(m["provider"], {}).get("client"),
+        )
         for m in payload.get("models", [])
     )
     return PriceTable(as_of=str(payload.get("as_of", "")), source=str(payload.get("source", "")), models=models)
@@ -136,17 +175,23 @@ def estimate_cost(
     provider: Optional[str] = None,
     cached_prompt_tokens: int = 0,
 ) -> Optional[float]:
-    """USD for a call at list price, or None if the model has no price."""
+    """USD for a call at list price, or None if the model has no price.
+
+    `prompt_tokens` includes `cached_prompt_tokens`; together they decide the
+    long-context tier, whose rates then apply to every token of the call.
+    """
     price = get_price(model, provider)
     if price is None:
         return None
+    input_rate, output_rate, cache_rate = price.rates_for(prompt_tokens)
     cached = min(cached_prompt_tokens, prompt_tokens)
-    cache_rate = price.cache_read_per_mtok if price.cache_read_per_mtok is not None else price.input_per_mtok
+    if cache_rate is None:
+        cache_rate = input_rate
     return (
-        (prompt_tokens - cached) * price.input_per_mtok
+        (prompt_tokens - cached) * input_rate
         + cached * cache_rate
-        + completion_tokens * price.output_per_mtok
+        + completion_tokens * output_rate
     ) / 1_000_000
 
 
-__all__ = ["ModelPrice", "PriceTable", "estimate_cost", "get_price", "load_prices"]
+__all__ = ["ContextTier", "ModelPrice", "PriceTable", "estimate_cost", "get_price", "load_prices"]

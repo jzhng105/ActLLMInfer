@@ -29,6 +29,12 @@ get_price("glm-4.6").provider                 # "zhipuai" (inferred, like init_c
 estimate_cost("openai/gpt-5-mini", prompt_tokens=1200, completion_tokens=300)  # 0.0009
 ```
 
+Long-context pricing is kept too. Gemini 2.5 Pro, for example, costs more
+once a prompt passes 200k tokens, and Alibaba's Qwen models price by input
+range. Providers bill the whole request at the tier its prompt reaches, so
+`estimate_cost` does the same (`get_price(...).rates_for(prompt_tokens)`
+shows the rates).
+
 The table is regenerated from LiteLLM's price data, read at each provider's
 own route (never a reseller's). Models that disappear upstream or pass their
 deprecation date are dropped, and new ones are added:

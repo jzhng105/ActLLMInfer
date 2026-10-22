@@ -1,51 +1,62 @@
 {
- "schema_version": 1,
+ "schema_version": 2,
  "as_of": "2026-10-22",
  "source": "https://raw.githubusercontent.com/BerriAI/litellm/main/model_prices_and_context_window.json",
  "providers": {
   "openai": {
    "client": "ChatOpenAI",
-   "litellm_provider": "openai"
+   "litellm_provider": "openai",
+   "threshold_inclusive": false
   },
   "anthropic": {
    "client": "ChatAnthropic",
-   "litellm_provider": "anthropic"
+   "litellm_provider": "anthropic",
+   "threshold_inclusive": false
   },
   "deepseek": {
    "client": "ChatDeepSeek",
-   "litellm_provider": "deepseek"
+   "litellm_provider": "deepseek",
+   "threshold_inclusive": false
   },
   "moonshot": {
    "client": "ChatMoonshot",
-   "litellm_provider": "moonshot"
+   "litellm_provider": "moonshot",
+   "threshold_inclusive": false
   },
   "zhipuai": {
    "client": "ChatZhipuAI",
-   "litellm_provider": "zai"
+   "litellm_provider": "zai",
+   "threshold_inclusive": false
   },
   "minimax": {
    "client": "ChatMiniMax",
-   "litellm_provider": "minimax"
+   "litellm_provider": "minimax",
+   "threshold_inclusive": false
   },
   "google": {
    "client": null,
-   "litellm_provider": "gemini"
+   "litellm_provider": "gemini",
+   "threshold_inclusive": false
   },
   "xai": {
    "client": null,
-   "litellm_provider": "xai"
+   "litellm_provider": "xai",
+   "threshold_inclusive": true
   },
   "mistral": {
    "client": null,
-   "litellm_provider": "mistral"
+   "litellm_provider": "mistral",
+   "threshold_inclusive": false
   },
   "cohere": {
    "client": null,
-   "litellm_provider": "cohere_chat"
+   "litellm_provider": "cohere_chat",
+   "threshold_inclusive": false
   },
   "alibaba": {
    "client": null,
-   "litellm_provider": "dashscope"
+   "litellm_provider": "dashscope",
+   "threshold_inclusive": false
   }
  },
  "models": [
@@ -141,6 +152,44 @@
   },
   {
    "provider": "alibaba",
+   "model": "qwen-flash",
+   "input_per_mtok": 0.05,
+   "output_per_mtok": 0.4,
+   "context_tiers": [
+    {
+     "above_tokens": 256000,
+     "input_per_mtok": 0.25,
+     "output_per_mtok": 2.0
+    }
+   ],
+   "context_window": 997952,
+   "max_output_tokens": 32768,
+   "supports_tools": true,
+   "supports_vision": false,
+   "supports_reasoning": true,
+   "litellm_key": "dashscope/qwen-flash"
+  },
+  {
+   "provider": "alibaba",
+   "model": "qwen-flash-2025-07-28",
+   "input_per_mtok": 0.05,
+   "output_per_mtok": 0.4,
+   "context_tiers": [
+    {
+     "above_tokens": 256000,
+     "input_per_mtok": 0.25,
+     "output_per_mtok": 2.0
+    }
+   ],
+   "context_window": 997952,
+   "max_output_tokens": 32768,
+   "supports_tools": true,
+   "supports_vision": false,
+   "supports_reasoning": true,
+   "litellm_key": "dashscope/qwen-flash-2025-07-28"
+  },
+  {
+   "provider": "alibaba",
    "model": "qwen-max",
    "input_per_mtok": 1.6,
    "output_per_mtok": 6.4,
@@ -201,6 +250,63 @@
   },
   {
    "provider": "alibaba",
+   "model": "qwen-plus-2025-07-28",
+   "input_per_mtok": 0.4,
+   "output_per_mtok": 1.2,
+   "context_tiers": [
+    {
+     "above_tokens": 256000,
+     "input_per_mtok": 1.2,
+     "output_per_mtok": 3.6
+    }
+   ],
+   "context_window": 997952,
+   "max_output_tokens": 32768,
+   "supports_tools": true,
+   "supports_vision": false,
+   "supports_reasoning": true,
+   "litellm_key": "dashscope/qwen-plus-2025-07-28"
+  },
+  {
+   "provider": "alibaba",
+   "model": "qwen-plus-2025-09-11",
+   "input_per_mtok": 0.4,
+   "output_per_mtok": 1.2,
+   "context_tiers": [
+    {
+     "above_tokens": 256000,
+     "input_per_mtok": 1.2,
+     "output_per_mtok": 3.6
+    }
+   ],
+   "context_window": 997952,
+   "max_output_tokens": 32768,
+   "supports_tools": true,
+   "supports_vision": false,
+   "supports_reasoning": true,
+   "litellm_key": "dashscope/qwen-plus-2025-09-11"
+  },
+  {
+   "provider": "alibaba",
+   "model": "qwen-plus-latest",
+   "input_per_mtok": 0.4,
+   "output_per_mtok": 1.2,
+   "context_tiers": [
+    {
+     "above_tokens": 256000,
+     "input_per_mtok": 1.2,
+     "output_per_mtok": 3.6
+    }
+   ],
+   "context_window": 997952,
+   "max_output_tokens": 32768,
+   "supports_tools": true,
+   "supports_vision": false,
+   "supports_reasoning": true,
+   "litellm_key": "dashscope/qwen-plus-latest"
+  },
+  {
+   "provider": "alibaba",
    "model": "qwen-turbo",
    "input_per_mtok": 0.05,
    "output_per_mtok": 0.2,
@@ -246,6 +352,202 @@
    "supports_vision": false,
    "supports_reasoning": true,
    "litellm_key": "dashscope/qwen-turbo-latest"
+  },
+  {
+   "provider": "alibaba",
+   "model": "qwen3-coder-flash",
+   "input_per_mtok": 0.3,
+   "output_per_mtok": 1.5,
+   "cache_read_per_mtok": 0.08,
+   "context_tiers": [
+    {
+     "above_tokens": 32000,
+     "input_per_mtok": 0.5,
+     "output_per_mtok": 2.5,
+     "cache_read_per_mtok": 0.12
+    },
+    {
+     "above_tokens": 128000,
+     "input_per_mtok": 0.8,
+     "output_per_mtok": 4.0,
+     "cache_read_per_mtok": 0.2
+    },
+    {
+     "above_tokens": 256000,
+     "input_per_mtok": 1.6,
+     "output_per_mtok": 9.6,
+     "cache_read_per_mtok": 0.4
+    }
+   ],
+   "context_window": 997952,
+   "max_output_tokens": 65536,
+   "supports_tools": true,
+   "supports_vision": false,
+   "supports_reasoning": true,
+   "litellm_key": "dashscope/qwen3-coder-flash"
+  },
+  {
+   "provider": "alibaba",
+   "model": "qwen3-coder-flash-2025-07-28",
+   "input_per_mtok": 0.3,
+   "output_per_mtok": 1.5,
+   "context_tiers": [
+    {
+     "above_tokens": 32000,
+     "input_per_mtok": 0.5,
+     "output_per_mtok": 2.5
+    },
+    {
+     "above_tokens": 128000,
+     "input_per_mtok": 0.8,
+     "output_per_mtok": 4.0
+    },
+    {
+     "above_tokens": 256000,
+     "input_per_mtok": 1.6,
+     "output_per_mtok": 9.6
+    }
+   ],
+   "context_window": 997952,
+   "max_output_tokens": 65536,
+   "supports_tools": true,
+   "supports_vision": false,
+   "supports_reasoning": true,
+   "litellm_key": "dashscope/qwen3-coder-flash-2025-07-28"
+  },
+  {
+   "provider": "alibaba",
+   "model": "qwen3-coder-plus",
+   "input_per_mtok": 1.0,
+   "output_per_mtok": 5.0,
+   "cache_read_per_mtok": 0.1,
+   "context_tiers": [
+    {
+     "above_tokens": 32000,
+     "input_per_mtok": 1.8,
+     "output_per_mtok": 9.0,
+     "cache_read_per_mtok": 0.18
+    },
+    {
+     "above_tokens": 128000,
+     "input_per_mtok": 3.0,
+     "output_per_mtok": 15.0,
+     "cache_read_per_mtok": 0.3
+    },
+    {
+     "above_tokens": 256000,
+     "input_per_mtok": 6.0,
+     "output_per_mtok": 60.0,
+     "cache_read_per_mtok": 0.6
+    }
+   ],
+   "context_window": 997952,
+   "max_output_tokens": 65536,
+   "supports_tools": true,
+   "supports_vision": false,
+   "supports_reasoning": true,
+   "litellm_key": "dashscope/qwen3-coder-plus"
+  },
+  {
+   "provider": "alibaba",
+   "model": "qwen3-coder-plus-2025-07-22",
+   "input_per_mtok": 1.0,
+   "output_per_mtok": 5.0,
+   "context_tiers": [
+    {
+     "above_tokens": 32000,
+     "input_per_mtok": 1.8,
+     "output_per_mtok": 9.0
+    },
+    {
+     "above_tokens": 128000,
+     "input_per_mtok": 3.0,
+     "output_per_mtok": 15.0
+    },
+    {
+     "above_tokens": 256000,
+     "input_per_mtok": 6.0,
+     "output_per_mtok": 60.0
+    }
+   ],
+   "context_window": 997952,
+   "max_output_tokens": 65536,
+   "supports_tools": true,
+   "supports_vision": false,
+   "supports_reasoning": true,
+   "litellm_key": "dashscope/qwen3-coder-plus-2025-07-22"
+  },
+  {
+   "provider": "alibaba",
+   "model": "qwen3-max",
+   "input_per_mtok": 1.2,
+   "output_per_mtok": 6.0,
+   "context_tiers": [
+    {
+     "above_tokens": 32000,
+     "input_per_mtok": 2.4,
+     "output_per_mtok": 12.0
+    },
+    {
+     "above_tokens": 128000,
+     "input_per_mtok": 3.0,
+     "output_per_mtok": 15.0
+    }
+   ],
+   "context_window": 258048,
+   "max_output_tokens": 65536,
+   "supports_tools": true,
+   "supports_vision": false,
+   "supports_reasoning": true,
+   "litellm_key": "dashscope/qwen3-max"
+  },
+  {
+   "provider": "alibaba",
+   "model": "qwen3-max-2026-01-23",
+   "input_per_mtok": 1.2,
+   "output_per_mtok": 6.0,
+   "context_tiers": [
+    {
+     "above_tokens": 32000,
+     "input_per_mtok": 2.4,
+     "output_per_mtok": 12.0
+    },
+    {
+     "above_tokens": 128000,
+     "input_per_mtok": 3.0,
+     "output_per_mtok": 15.0
+    }
+   ],
+   "context_window": 258048,
+   "max_output_tokens": 65536,
+   "supports_tools": true,
+   "supports_vision": false,
+   "supports_reasoning": true,
+   "litellm_key": "dashscope/qwen3-max-2026-01-23"
+  },
+  {
+   "provider": "alibaba",
+   "model": "qwen3-max-preview",
+   "input_per_mtok": 1.2,
+   "output_per_mtok": 6.0,
+   "context_tiers": [
+    {
+     "above_tokens": 32000,
+     "input_per_mtok": 2.4,
+     "output_per_mtok": 12.0
+    },
+    {
+     "above_tokens": 128000,
+     "input_per_mtok": 3.0,
+     "output_per_mtok": 15.0
+    }
+   ],
+   "context_window": 258048,
+   "max_output_tokens": 65536,
+   "supports_tools": true,
+   "supports_vision": false,
+   "supports_reasoning": true,
+   "litellm_key": "dashscope/qwen3-max-preview"
   },
   {
    "provider": "alibaba",
@@ -321,6 +623,49 @@
   },
   {
    "provider": "alibaba",
+   "model": "qwen3-vl-plus",
+   "input_per_mtok": 0.2,
+   "output_per_mtok": 1.6,
+   "context_tiers": [
+    {
+     "above_tokens": 32000,
+     "input_per_mtok": 0.3,
+     "output_per_mtok": 2.4
+    },
+    {
+     "above_tokens": 128000,
+     "input_per_mtok": 0.6,
+     "output_per_mtok": 4.8
+    }
+   ],
+   "context_window": 260096,
+   "max_output_tokens": 32768,
+   "supports_tools": true,
+   "supports_vision": true,
+   "supports_reasoning": true,
+   "litellm_key": "dashscope/qwen3-vl-plus"
+  },
+  {
+   "provider": "alibaba",
+   "model": "qwen3.5-plus",
+   "input_per_mtok": 0.4,
+   "output_per_mtok": 2.4,
+   "context_tiers": [
+    {
+     "above_tokens": 256000,
+     "input_per_mtok": 0.5,
+     "output_per_mtok": 3.0
+    }
+   ],
+   "context_window": 991808,
+   "max_output_tokens": 65536,
+   "supports_tools": true,
+   "supports_vision": true,
+   "supports_reasoning": true,
+   "litellm_key": "dashscope/qwen3.5-plus"
+  },
+  {
+   "provider": "alibaba",
    "model": "qwen3.7-max",
    "input_per_mtok": 2.5,
    "output_per_mtok": 7.5,
@@ -331,6 +676,27 @@
    "supports_vision": false,
    "supports_reasoning": true,
    "litellm_key": "dashscope/qwen3.7-max"
+  },
+  {
+   "provider": "alibaba",
+   "model": "qwen3.7-plus",
+   "input_per_mtok": 0.4,
+   "output_per_mtok": 1.6,
+   "cache_read_per_mtok": 0.08,
+   "context_tiers": [
+    {
+     "above_tokens": 256000,
+     "input_per_mtok": 1.2,
+     "output_per_mtok": 4.8,
+     "cache_read_per_mtok": 0.24
+    }
+   ],
+   "context_window": 991808,
+   "max_output_tokens": 65536,
+   "supports_tools": true,
+   "supports_vision": true,
+   "supports_reasoning": true,
+   "litellm_key": "dashscope/qwen3.7-plus"
   },
   {
    "provider": "alibaba",
@@ -441,6 +807,14 @@
    "input_per_mtok": 0.1,
    "output_per_mtok": 0.5,
    "cache_read_per_mtok": 0.01,
+   "context_tiers": [
+    {
+     "above_tokens": 100000,
+     "input_per_mtok": 0.5,
+     "output_per_mtok": 2.5,
+     "cache_read_per_mtok": 0.05
+    }
+   ],
    "context_window": 1000000,
    "max_output_tokens": 128000,
    "supports_tools": true,
@@ -903,6 +1277,14 @@
    "input_per_mtok": 1.25,
    "output_per_mtok": 10.0,
    "cache_read_per_mtok": 0.125,
+   "context_tiers": [
+    {
+     "above_tokens": 200000,
+     "input_per_mtok": 2.5,
+     "output_per_mtok": 15.0,
+     "cache_read_per_mtok": 0.25
+    }
+   ],
    "context_window": 1048576,
    "max_output_tokens": 65536,
    "supports_tools": true,
@@ -957,6 +1339,14 @@
    "input_per_mtok": 2.0,
    "output_per_mtok": 12.0,
    "cache_read_per_mtok": 0.2,
+   "context_tiers": [
+    {
+     "above_tokens": 200000,
+     "input_per_mtok": 4.0,
+     "output_per_mtok": 18.0,
+     "cache_read_per_mtok": 0.4
+    }
+   ],
    "context_window": 1048576,
    "max_output_tokens": 65536,
    "supports_tools": true,
@@ -970,6 +1360,14 @@
    "input_per_mtok": 2.0,
    "output_per_mtok": 12.0,
    "cache_read_per_mtok": 0.2,
+   "context_tiers": [
+    {
+     "above_tokens": 200000,
+     "input_per_mtok": 4.0,
+     "output_per_mtok": 18.0,
+     "cache_read_per_mtok": 0.4
+    }
+   ],
    "context_window": 1048576,
    "max_output_tokens": 65536,
    "supports_tools": true,
@@ -1060,6 +1458,13 @@
    "model": "gemini-exp-1114",
    "input_per_mtok": 0.0,
    "output_per_mtok": 0.0,
+   "context_tiers": [
+    {
+     "above_tokens": 128000,
+     "input_per_mtok": 0.0,
+     "output_per_mtok": 0.0
+    }
+   ],
    "context_window": 1048576,
    "max_output_tokens": 8192,
    "supports_tools": true,
@@ -1072,6 +1477,13 @@
    "model": "gemini-exp-1206",
    "input_per_mtok": 0.0,
    "output_per_mtok": 0.0,
+   "context_tiers": [
+    {
+     "above_tokens": 128000,
+     "input_per_mtok": 0.0,
+     "output_per_mtok": 0.0
+    }
+   ],
    "context_window": 2097152,
    "max_output_tokens": 8192,
    "supports_tools": true,
@@ -1158,6 +1570,14 @@
    "input_per_mtok": 2.0,
    "output_per_mtok": 12.0,
    "cache_read_per_mtok": 0.2,
+   "context_tiers": [
+    {
+     "above_tokens": 200000,
+     "input_per_mtok": 4.0,
+     "output_per_mtok": 18.0,
+     "cache_read_per_mtok": 0.4
+    }
+   ],
    "context_window": 1048576,
    "max_output_tokens": 65536,
    "supports_tools": true,
@@ -1195,6 +1615,13 @@
    "model": "gemma-3-27b-it",
    "input_per_mtok": 0.0,
    "output_per_mtok": 0.0,
+   "context_tiers": [
+    {
+     "above_tokens": 128000,
+     "input_per_mtok": 0.0,
+     "output_per_mtok": 0.0
+    }
+   ],
    "context_window": 131072,
    "max_output_tokens": 8192,
    "supports_tools": true,
@@ -1231,6 +1658,13 @@
    "model": "learnlm-1.5-pro-experimental",
    "input_per_mtok": 0.0,
    "output_per_mtok": 0.0,
+   "context_tiers": [
+    {
+     "above_tokens": 128000,
+     "input_per_mtok": 0.0,
+     "output_per_mtok": 0.0
+    }
+   ],
    "context_window": 32767,
    "max_output_tokens": 8192,
    "supports_tools": true,
@@ -1381,6 +1815,14 @@
    "input_per_mtok": 0.3,
    "output_per_mtok": 1.2,
    "cache_read_per_mtok": 0.06,
+   "context_tiers": [
+    {
+     "above_tokens": 512000,
+     "input_per_mtok": 0.6,
+     "output_per_mtok": 2.4,
+     "cache_read_per_mtok": 0.12
+    }
+   ],
    "context_window": 1000000,
    "max_output_tokens": 128000,
    "supports_tools": true,
@@ -2165,6 +2607,14 @@
    "input_per_mtok": 4.0,
    "output_per_mtok": 20.0,
    "cache_read_per_mtok": 0.4,
+   "context_tiers": [
+    {
+     "above_tokens": 272000,
+     "input_per_mtok": 8.0,
+     "output_per_mtok": 30.0,
+     "cache_read_per_mtok": 0.8
+    }
+   ],
    "context_window": 922000,
    "max_output_tokens": 128000,
    "supports_tools": true,
@@ -2178,6 +2628,14 @@
    "input_per_mtok": 12.5,
    "output_per_mtok": 75.0,
    "cache_read_per_mtok": 1.25,
+   "context_tiers": [
+    {
+     "above_tokens": 272000,
+     "input_per_mtok": 25.0,
+     "output_per_mtok": 112.5,
+     "cache_read_per_mtok": 2.5
+    }
+   ],
    "context_window": 400000,
    "max_output_tokens": 128000,
    "supports_tools": true,
@@ -2845,6 +3303,14 @@
    "input_per_mtok": 2.5,
    "output_per_mtok": 15.0,
    "cache_read_per_mtok": 0.25,
+   "context_tiers": [
+    {
+     "above_tokens": 272000,
+     "input_per_mtok": 5.0,
+     "output_per_mtok": 22.5,
+     "cache_read_per_mtok": 0.5
+    }
+   ],
    "context_window": 1050000,
    "max_output_tokens": 128000,
    "supports_tools": true,
@@ -2858,6 +3324,14 @@
    "input_per_mtok": 2.5,
    "output_per_mtok": 15.0,
    "cache_read_per_mtok": 0.25,
+   "context_tiers": [
+    {
+     "above_tokens": 272000,
+     "input_per_mtok": 5.0,
+     "output_per_mtok": 22.5,
+     "cache_read_per_mtok": 0.5
+    }
+   ],
    "context_window": 1050000,
    "max_output_tokens": 128000,
    "supports_tools": true,
@@ -2924,6 +3398,14 @@
    "input_per_mtok": 5.0,
    "output_per_mtok": 30.0,
    "cache_read_per_mtok": 0.5,
+   "context_tiers": [
+    {
+     "above_tokens": 272000,
+     "input_per_mtok": 10.0,
+     "output_per_mtok": 45.0,
+     "cache_read_per_mtok": 1.0
+    }
+   ],
    "context_window": 1050000,
    "max_output_tokens": 128000,
    "supports_tools": true,
@@ -2937,6 +3419,14 @@
    "input_per_mtok": 5.0,
    "output_per_mtok": 30.0,
    "cache_read_per_mtok": 0.5,
+   "context_tiers": [
+    {
+     "above_tokens": 272000,
+     "input_per_mtok": 10.0,
+     "output_per_mtok": 45.0,
+     "cache_read_per_mtok": 1.0
+    }
+   ],
    "context_window": 1050000,
    "max_output_tokens": 128000,
    "supports_tools": true,
@@ -2972,6 +3462,14 @@
    "input_per_mtok": 4.0,
    "output_per_mtok": 20.0,
    "cache_read_per_mtok": 0.4,
+   "context_tiers": [
+    {
+     "above_tokens": 272000,
+     "input_per_mtok": 8.0,
+     "output_per_mtok": 30.0,
+     "cache_read_per_mtok": 0.8
+    }
+   ],
    "context_window": 922000,
    "max_output_tokens": 128000,
    "supports_tools": true,
@@ -2985,6 +3483,14 @@
    "input_per_mtok": 12.5,
    "output_per_mtok": 75.0,
    "cache_read_per_mtok": 1.25,
+   "context_tiers": [
+    {
+     "above_tokens": 272000,
+     "input_per_mtok": 25.0,
+     "output_per_mtok": 112.5,
+     "cache_read_per_mtok": 2.5
+    }
+   ],
    "context_window": 400000,
    "max_output_tokens": 128000,
    "supports_tools": true,
@@ -2998,6 +3504,14 @@
    "input_per_mtok": 0.2,
    "output_per_mtok": 1.2,
    "cache_read_per_mtok": 0.02,
+   "context_tiers": [
+    {
+     "above_tokens": 272000,
+     "input_per_mtok": 0.4,
+     "output_per_mtok": 1.8,
+     "cache_read_per_mtok": 0.04
+    }
+   ],
    "context_window": 922000,
    "max_output_tokens": 128000,
    "supports_tools": true,
@@ -3011,6 +3525,14 @@
    "input_per_mtok": 4.0,
    "output_per_mtok": 20.0,
    "cache_read_per_mtok": 0.4,
+   "context_tiers": [
+    {
+     "above_tokens": 272000,
+     "input_per_mtok": 8.0,
+     "output_per_mtok": 30.0,
+     "cache_read_per_mtok": 0.8
+    }
+   ],
    "context_window": 922000,
    "max_output_tokens": 128000,
    "supports_tools": true,
@@ -3024,6 +3546,14 @@
    "input_per_mtok": 2.0,
    "output_per_mtok": 12.0,
    "cache_read_per_mtok": 0.2,
+   "context_tiers": [
+    {
+     "above_tokens": 272000,
+     "input_per_mtok": 4.0,
+     "output_per_mtok": 18.0,
+     "cache_read_per_mtok": 0.4
+    }
+   ],
    "context_window": 922000,
    "max_output_tokens": 128000,
    "supports_tools": true,
@@ -3037,6 +3567,14 @@
    "input_per_mtok": 10.0,
    "output_per_mtok": 50.0,
    "cache_read_per_mtok": 1.0,
+   "context_tiers": [
+    {
+     "above_tokens": 272000,
+     "input_per_mtok": 20.0,
+     "output_per_mtok": 75.0,
+     "cache_read_per_mtok": 2.0
+    }
+   ],
    "context_window": 922000,
    "max_output_tokens": 128000,
    "supports_tools": true,
@@ -3050,6 +3588,14 @@
    "input_per_mtok": 0.1,
    "output_per_mtok": 0.5,
    "cache_read_per_mtok": 0.01,
+   "context_tiers": [
+    {
+     "above_tokens": 272000,
+     "input_per_mtok": 0.2,
+     "output_per_mtok": 0.75,
+     "cache_read_per_mtok": 0.02
+    }
+   ],
    "context_window": 922000,
    "max_output_tokens": 128000,
    "supports_tools": true,
@@ -3063,6 +3609,14 @@
    "input_per_mtok": 2.0,
    "output_per_mtok": 10.0,
    "cache_read_per_mtok": 0.2,
+   "context_tiers": [
+    {
+     "above_tokens": 272000,
+     "input_per_mtok": 4.0,
+     "output_per_mtok": 15.0,
+     "cache_read_per_mtok": 0.4
+    }
+   ],
    "context_window": 922000,
    "max_output_tokens": 128000,
    "supports_tools": true,
@@ -3076,6 +3630,14 @@
    "input_per_mtok": 2.0,
    "output_per_mtok": 10.0,
    "cache_read_per_mtok": 0.1,
+   "context_tiers": [
+    {
+     "above_tokens": 272000,
+     "input_per_mtok": 4.0,
+     "output_per_mtok": 15.0,
+     "cache_read_per_mtok": 0.2
+    }
+   ],
    "context_window": 922000,
    "max_output_tokens": 128000,
    "supports_tools": true,
@@ -3286,6 +3848,14 @@
    "input_per_mtok": 1.25,
    "output_per_mtok": 2.5,
    "cache_read_per_mtok": 0.2,
+   "context_tiers": [
+    {
+     "above_tokens": 200000,
+     "input_per_mtok": 2.5,
+     "output_per_mtok": 5.0,
+     "cache_read_per_mtok": 0.4
+    }
+   ],
    "context_window": 1000000,
    "max_output_tokens": 1000000,
    "supports_tools": true,
@@ -3299,6 +3869,14 @@
    "input_per_mtok": 1.25,
    "output_per_mtok": 2.5,
    "cache_read_per_mtok": 0.2,
+   "context_tiers": [
+    {
+     "above_tokens": 200000,
+     "input_per_mtok": 2.5,
+     "output_per_mtok": 5.0,
+     "cache_read_per_mtok": 0.4
+    }
+   ],
    "context_window": 1000000,
    "max_output_tokens": 1000000,
    "supports_tools": true,
@@ -3312,6 +3890,14 @@
    "input_per_mtok": 1.25,
    "output_per_mtok": 2.5,
    "cache_read_per_mtok": 0.2,
+   "context_tiers": [
+    {
+     "above_tokens": 200000,
+     "input_per_mtok": 2.5,
+     "output_per_mtok": 5.0,
+     "cache_read_per_mtok": 0.4
+    }
+   ],
    "context_window": 1000000,
    "max_output_tokens": 1000000,
    "supports_tools": true,
@@ -3325,6 +3911,14 @@
    "input_per_mtok": 1.25,
    "output_per_mtok": 2.5,
    "cache_read_per_mtok": 0.2,
+   "context_tiers": [
+    {
+     "above_tokens": 200000,
+     "input_per_mtok": 2.5,
+     "output_per_mtok": 5.0,
+     "cache_read_per_mtok": 0.4
+    }
+   ],
    "context_window": 1000000,
    "max_output_tokens": 1000000,
    "supports_tools": true,
@@ -3338,6 +3932,14 @@
    "input_per_mtok": 1.25,
    "output_per_mtok": 2.5,
    "cache_read_per_mtok": 0.2,
+   "context_tiers": [
+    {
+     "above_tokens": 200000,
+     "input_per_mtok": 2.5,
+     "output_per_mtok": 5.0,
+     "cache_read_per_mtok": 0.4
+    }
+   ],
    "context_window": 1000000,
    "max_output_tokens": 1000000,
    "supports_tools": true,
@@ -3351,6 +3953,14 @@
    "input_per_mtok": 1.25,
    "output_per_mtok": 2.5,
    "cache_read_per_mtok": 0.2,
+   "context_tiers": [
+    {
+     "above_tokens": 200000,
+     "input_per_mtok": 2.5,
+     "output_per_mtok": 5.0,
+     "cache_read_per_mtok": 0.4
+    }
+   ],
    "context_window": 1000000,
    "max_output_tokens": 1000000,
    "supports_tools": true,
@@ -3364,6 +3974,14 @@
    "input_per_mtok": 1.25,
    "output_per_mtok": 2.5,
    "cache_read_per_mtok": 0.2,
+   "context_tiers": [
+    {
+     "above_tokens": 200000,
+     "input_per_mtok": 2.5,
+     "output_per_mtok": 5.0,
+     "cache_read_per_mtok": 0.4
+    }
+   ],
    "context_window": 1000000,
    "max_output_tokens": 1000000,
    "supports_tools": true,
@@ -3377,6 +3995,14 @@
    "input_per_mtok": 1.25,
    "output_per_mtok": 2.5,
    "cache_read_per_mtok": 0.2,
+   "context_tiers": [
+    {
+     "above_tokens": 200000,
+     "input_per_mtok": 2.5,
+     "output_per_mtok": 5.0,
+     "cache_read_per_mtok": 0.4
+    }
+   ],
    "context_window": 1000000,
    "max_output_tokens": 1000000,
    "supports_tools": true,
@@ -3390,6 +4016,14 @@
    "input_per_mtok": 1.25,
    "output_per_mtok": 2.5,
    "cache_read_per_mtok": 0.2,
+   "context_tiers": [
+    {
+     "above_tokens": 200000,
+     "input_per_mtok": 2.5,
+     "output_per_mtok": 5.0,
+     "cache_read_per_mtok": 0.4
+    }
+   ],
    "context_window": 1000000,
    "max_output_tokens": 1000000,
    "supports_tools": true,
@@ -3403,6 +4037,14 @@
    "input_per_mtok": 1.25,
    "output_per_mtok": 2.5,
    "cache_read_per_mtok": 0.2,
+   "context_tiers": [
+    {
+     "above_tokens": 200000,
+     "input_per_mtok": 2.5,
+     "output_per_mtok": 5.0,
+     "cache_read_per_mtok": 0.4
+    }
+   ],
    "context_window": 1000000,
    "max_output_tokens": 1000000,
    "supports_tools": true,
@@ -3416,6 +4058,14 @@
    "input_per_mtok": 1.25,
    "output_per_mtok": 2.5,
    "cache_read_per_mtok": 0.2,
+   "context_tiers": [
+    {
+     "above_tokens": 200000,
+     "input_per_mtok": 2.5,
+     "output_per_mtok": 5.0,
+     "cache_read_per_mtok": 0.4
+    }
+   ],
    "context_window": 1000000,
    "max_output_tokens": 1000000,
    "supports_tools": true,
@@ -3429,6 +4079,14 @@
    "input_per_mtok": 1.25,
    "output_per_mtok": 2.5,
    "cache_read_per_mtok": 0.2,
+   "context_tiers": [
+    {
+     "above_tokens": 200000,
+     "input_per_mtok": 2.5,
+     "output_per_mtok": 5.0,
+     "cache_read_per_mtok": 0.4
+    }
+   ],
    "context_window": 1000000,
    "max_output_tokens": 1000000,
    "supports_tools": true,
@@ -3442,6 +4100,14 @@
    "input_per_mtok": 1.25,
    "output_per_mtok": 2.5,
    "cache_read_per_mtok": 0.2,
+   "context_tiers": [
+    {
+     "above_tokens": 200000,
+     "input_per_mtok": 2.5,
+     "output_per_mtok": 5.0,
+     "cache_read_per_mtok": 0.4
+    }
+   ],
    "context_window": 1000000,
    "max_output_tokens": 1000000,
    "supports_tools": true,
@@ -3455,6 +4121,14 @@
    "input_per_mtok": 1.25,
    "output_per_mtok": 2.5,
    "cache_read_per_mtok": 0.2,
+   "context_tiers": [
+    {
+     "above_tokens": 200000,
+     "input_per_mtok": 2.5,
+     "output_per_mtok": 5.0,
+     "cache_read_per_mtok": 0.4
+    }
+   ],
    "context_window": 1000000,
    "max_output_tokens": 1000000,
    "supports_tools": true,
@@ -3468,6 +4142,14 @@
    "input_per_mtok": 1.25,
    "output_per_mtok": 2.5,
    "cache_read_per_mtok": 0.2,
+   "context_tiers": [
+    {
+     "above_tokens": 200000,
+     "input_per_mtok": 2.5,
+     "output_per_mtok": 5.0,
+     "cache_read_per_mtok": 0.4
+    }
+   ],
    "context_window": 1000000,
    "max_output_tokens": 1000000,
    "supports_tools": true,
@@ -3481,6 +4163,14 @@
    "input_per_mtok": 1.25,
    "output_per_mtok": 2.5,
    "cache_read_per_mtok": 0.2,
+   "context_tiers": [
+    {
+     "above_tokens": 200000,
+     "input_per_mtok": 2.5,
+     "output_per_mtok": 5.0,
+     "cache_read_per_mtok": 0.4
+    }
+   ],
    "context_window": 1000000,
    "max_output_tokens": 1000000,
    "supports_tools": true,
@@ -3494,6 +4184,14 @@
    "input_per_mtok": 1.25,
    "output_per_mtok": 2.5,
    "cache_read_per_mtok": 0.2,
+   "context_tiers": [
+    {
+     "above_tokens": 200000,
+     "input_per_mtok": 2.5,
+     "output_per_mtok": 5.0,
+     "cache_read_per_mtok": 0.4
+    }
+   ],
    "context_window": 1000000,
    "max_output_tokens": 1000000,
    "supports_tools": true,
@@ -3507,6 +4205,14 @@
    "input_per_mtok": 1.25,
    "output_per_mtok": 2.5,
    "cache_read_per_mtok": 0.2,
+   "context_tiers": [
+    {
+     "above_tokens": 200000,
+     "input_per_mtok": 2.5,
+     "output_per_mtok": 5.0,
+     "cache_read_per_mtok": 0.4
+    }
+   ],
    "context_window": 1000000,
    "max_output_tokens": 1000000,
    "supports_tools": true,
@@ -3520,6 +4226,14 @@
    "input_per_mtok": 1.25,
    "output_per_mtok": 2.5,
    "cache_read_per_mtok": 0.2,
+   "context_tiers": [
+    {
+     "above_tokens": 200000,
+     "input_per_mtok": 2.5,
+     "output_per_mtok": 5.0,
+     "cache_read_per_mtok": 0.4
+    }
+   ],
    "context_window": 1000000,
    "max_output_tokens": 1000000,
    "supports_tools": true,
@@ -3533,6 +4247,14 @@
    "input_per_mtok": 1.25,
    "output_per_mtok": 2.5,
    "cache_read_per_mtok": 0.2,
+   "context_tiers": [
+    {
+     "above_tokens": 200000,
+     "input_per_mtok": 2.5,
+     "output_per_mtok": 5.0,
+     "cache_read_per_mtok": 0.4
+    }
+   ],
    "context_window": 1000000,
    "max_output_tokens": 1000000,
    "supports_tools": true,
@@ -3546,6 +4268,14 @@
    "input_per_mtok": 1.25,
    "output_per_mtok": 2.5,
    "cache_read_per_mtok": 0.2,
+   "context_tiers": [
+    {
+     "above_tokens": 200000,
+     "input_per_mtok": 2.5,
+     "output_per_mtok": 5.0,
+     "cache_read_per_mtok": 0.4
+    }
+   ],
    "context_window": 1000000,
    "max_output_tokens": 1000000,
    "supports_tools": true,
@@ -3559,6 +4289,14 @@
    "input_per_mtok": 1.25,
    "output_per_mtok": 2.5,
    "cache_read_per_mtok": 0.2,
+   "context_tiers": [
+    {
+     "above_tokens": 200000,
+     "input_per_mtok": 2.5,
+     "output_per_mtok": 5.0,
+     "cache_read_per_mtok": 0.4
+    }
+   ],
    "context_window": 1000000,
    "max_output_tokens": 1000000,
    "supports_tools": true,
@@ -3572,6 +4310,14 @@
    "input_per_mtok": 1.25,
    "output_per_mtok": 2.5,
    "cache_read_per_mtok": 0.2,
+   "context_tiers": [
+    {
+     "above_tokens": 200000,
+     "input_per_mtok": 2.5,
+     "output_per_mtok": 5.0,
+     "cache_read_per_mtok": 0.4
+    }
+   ],
    "context_window": 1000000,
    "max_output_tokens": 1000000,
    "supports_tools": true,
@@ -3585,6 +4331,14 @@
    "input_per_mtok": 1.25,
    "output_per_mtok": 2.5,
    "cache_read_per_mtok": 0.2,
+   "context_tiers": [
+    {
+     "above_tokens": 200000,
+     "input_per_mtok": 2.5,
+     "output_per_mtok": 5.0,
+     "cache_read_per_mtok": 0.4
+    }
+   ],
    "context_window": 1000000,
    "max_output_tokens": 1000000,
    "supports_tools": true,
@@ -3598,6 +4352,14 @@
    "input_per_mtok": 1.25,
    "output_per_mtok": 2.5,
    "cache_read_per_mtok": 0.2,
+   "context_tiers": [
+    {
+     "above_tokens": 200000,
+     "input_per_mtok": 2.5,
+     "output_per_mtok": 5.0,
+     "cache_read_per_mtok": 0.4
+    }
+   ],
    "context_window": 1000000,
    "max_output_tokens": 1000000,
    "supports_tools": true,
@@ -3611,6 +4373,14 @@
    "input_per_mtok": 1.25,
    "output_per_mtok": 2.5,
    "cache_read_per_mtok": 0.2,
+   "context_tiers": [
+    {
+     "above_tokens": 200000,
+     "input_per_mtok": 2.5,
+     "output_per_mtok": 5.0,
+     "cache_read_per_mtok": 0.4
+    }
+   ],
    "context_window": 1000000,
    "max_output_tokens": 1000000,
    "supports_tools": true,
@@ -3624,6 +4394,14 @@
    "input_per_mtok": 1.25,
    "output_per_mtok": 2.5,
    "cache_read_per_mtok": 0.2,
+   "context_tiers": [
+    {
+     "above_tokens": 200000,
+     "input_per_mtok": 2.5,
+     "output_per_mtok": 5.0,
+     "cache_read_per_mtok": 0.4
+    }
+   ],
    "context_window": 1000000,
    "max_output_tokens": 1000000,
    "supports_tools": true,
@@ -3637,6 +4415,14 @@
    "input_per_mtok": 2.0,
    "output_per_mtok": 6.0,
    "cache_read_per_mtok": 0.3,
+   "context_tiers": [
+    {
+     "above_tokens": 200000,
+     "input_per_mtok": 4.0,
+     "output_per_mtok": 12.0,
+     "cache_read_per_mtok": 0.6
+    }
+   ],
    "context_window": 500000,
    "max_output_tokens": 500000,
    "supports_tools": true,
@@ -3650,6 +4436,14 @@
    "input_per_mtok": 2.0,
    "output_per_mtok": 6.0,
    "cache_read_per_mtok": 0.3,
+   "context_tiers": [
+    {
+     "above_tokens": 200000,
+     "input_per_mtok": 4.0,
+     "output_per_mtok": 12.0,
+     "cache_read_per_mtok": 0.6
+    }
+   ],
    "context_window": 500000,
    "max_output_tokens": 500000,
    "supports_tools": true,
@@ -3663,6 +4457,14 @@
    "input_per_mtok": 2.0,
    "output_per_mtok": 6.0,
    "cache_read_per_mtok": 0.5,
+   "context_tiers": [
+    {
+     "above_tokens": 200000,
+     "input_per_mtok": 4.0,
+     "output_per_mtok": 12.0,
+     "cache_read_per_mtok": 1.0
+    }
+   ],
    "context_window": 500000,
    "max_output_tokens": 500000,
    "supports_tools": true,
@@ -3676,6 +4478,14 @@
    "input_per_mtok": 2.0,
    "output_per_mtok": 6.0,
    "cache_read_per_mtok": 0.5,
+   "context_tiers": [
+    {
+     "above_tokens": 200000,
+     "input_per_mtok": 4.0,
+     "output_per_mtok": 12.0,
+     "cache_read_per_mtok": 1.0
+    }
+   ],
    "context_window": 500000,
    "max_output_tokens": 500000,
    "supports_tools": true,
@@ -3689,6 +4499,14 @@
    "input_per_mtok": 1.0,
    "output_per_mtok": 2.0,
    "cache_read_per_mtok": 0.2,
+   "context_tiers": [
+    {
+     "above_tokens": 200000,
+     "input_per_mtok": 2.0,
+     "output_per_mtok": 4.0,
+     "cache_read_per_mtok": 0.4
+    }
+   ],
    "context_window": 256000,
    "max_output_tokens": 256000,
    "supports_tools": true,
@@ -3702,6 +4520,14 @@
    "input_per_mtok": 2.0,
    "output_per_mtok": 6.0,
    "cache_read_per_mtok": 0.3,
+   "context_tiers": [
+    {
+     "above_tokens": 200000,
+     "input_per_mtok": 4.0,
+     "output_per_mtok": 12.0,
+     "cache_read_per_mtok": 0.6
+    }
+   ],
    "context_window": 500000,
    "max_output_tokens": 500000,
    "supports_tools": true,
@@ -3715,6 +4541,14 @@
    "input_per_mtok": 1.0,
    "output_per_mtok": 2.0,
    "cache_read_per_mtok": 0.2,
+   "context_tiers": [
+    {
+     "above_tokens": 200000,
+     "input_per_mtok": 2.0,
+     "output_per_mtok": 4.0,
+     "cache_read_per_mtok": 0.4
+    }
+   ],
    "context_window": 256000,
    "max_output_tokens": 256000,
    "supports_tools": true,
@@ -3728,6 +4562,14 @@
    "input_per_mtok": 1.0,
    "output_per_mtok": 2.0,
    "cache_read_per_mtok": 0.2,
+   "context_tiers": [
+    {
+     "above_tokens": 200000,
+     "input_per_mtok": 2.0,
+     "output_per_mtok": 4.0,
+     "cache_read_per_mtok": 0.4
+    }
+   ],
    "context_window": 256000,
    "max_output_tokens": 256000,
    "supports_tools": true,
@@ -3741,6 +4583,14 @@
    "input_per_mtok": 1.0,
    "output_per_mtok": 2.0,
    "cache_read_per_mtok": 0.2,
+   "context_tiers": [
+    {
+     "above_tokens": 200000,
+     "input_per_mtok": 2.0,
+     "output_per_mtok": 4.0,
+     "cache_read_per_mtok": 0.4
+    }
+   ],
    "context_window": 256000,
    "max_output_tokens": 256000,
    "supports_tools": true,

@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from actllminfer.pricing import PriceTable, estimate_cost, get_price, load_prices
+from actllminfer.pricing import ContextTier, ModelPrice, PriceTable, estimate_cost, get_price, load_prices
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -46,7 +46,7 @@ def test_providers_with_a_client_are_marked():
 
 def test_bundled_file_matches_what_the_script_writes():
     raw = json.loads((ROOT / "actllminfer" / "data" / "model_prices.json").read_text())
-    assert raw["schema_version"] == 1
+    assert raw["schema_version"] == 2
     assert raw["source"].startswith("https://")  # never a local path
     assert update_prices.dumps(raw) == (ROOT / "actllminfer" / "data" / "model_prices.json").read_text()
 
@@ -177,3 +177,122 @@ def test_script_check_mode(tmp_path):
     assert update_prices.main([*args, "--check"]) == 0
     source.write_text(json.dumps({"gpt-5.5": _entry("openai", 4, 24)}))
     assert update_prices.main([*args, "--check"]) == 1
+
+
+# ---------------------------------------------------------------------------
+# Long-context tiers
+# ---------------------------------------------------------------------------
+
+
+def test_threshold_fields_become_context_tiers():
+    built = update_prices.build(
+        {"gemini/gemini-2.5-pro": _entry(
+            "gemini", 1.25, 10, cache_read_input_token_cost=1.25e-7,
+            input_cost_per_token_above_200k_tokens=2.5e-6,
+            output_cost_per_token_above_200k_tokens=15e-6,
+            cache_read_input_token_cost_above_200k_tokens=2.5e-7,
+            input_cost_per_token_above_200k_tokens_priority=4.5e-6,   # another service tier: ignored
+            input_cost_per_token_above_200k_tokens_batches=1.25e-6,  # batch pricing: ignored
+        )},
+        as_of="2026-10-22", source="t",
+    )
+    [m] = built["models"]
+    assert m["context_tiers"] == [
+        {"above_tokens": 200000, "input_per_mtok": 2.5, "output_per_mtok": 15.0, "cache_read_per_mtok": 0.25}
+    ]
+
+
+def test_a_tier_that_omits_a_rate_keeps_the_base_rate():
+    built = update_prices.build(
+        {"claude-x": _entry("anthropic", 1, 5, input_cost_per_token_above_100k_tokens=2e-6)},
+        as_of="2026-10-22", source="t",
+    )
+    assert built["models"][0]["context_tiers"] == [
+        {"above_tokens": 100000, "input_per_mtok": 2.0, "output_per_mtok": 5.0}
+    ]
+
+
+def test_tiered_pricing_ranges_supply_base_and_tiers():
+    # Alibaba states only ranges; such models used to be dropped as unpriced.
+    built = update_prices.build(
+        {"dashscope/qwen3-max": {"litellm_provider": "dashscope", "mode": "chat", "tiered_pricing": [
+            {"input_cost_per_token": 2.4e-6, "output_cost_per_token": 12e-6, "range": [32000, 128000]},
+            {"input_cost_per_token": 1.2e-6, "output_cost_per_token": 6e-6, "range": [0, 32000]},
+        ]}},
+        as_of="2026-10-22", source="t",
+    )
+    [m] = built["models"]
+    assert (m["input_per_mtok"], m["output_per_mtok"]) == (1.2, 6.0)
+    assert m["context_tiers"] == [{"above_tokens": 32000, "input_per_mtok": 2.4, "output_per_mtok": 12.0}]
+
+
+def _tiered(**kw) -> ModelPrice:
+    return ModelPrice(
+        provider="google", model="m", input_per_mtok=1.0, output_per_mtok=10.0, cache_read_per_mtok=0.1,
+        context_tiers=(ContextTier(200_000, 2.0, 15.0, 0.2), ContextTier(1_000_000, 4.0, 30.0)), **kw,
+    )
+
+
+@pytest.mark.parametrize(
+    "prompt_tokens, inclusive, rates",
+    [
+        (199_999, False, (1.0, 10.0, 0.1)),
+        (200_000, False, (1.0, 10.0, 0.1)),   # exceeds, not reaches
+        (200_000, True, (2.0, 15.0, 0.2)),    # xAI: reaching the threshold is enough
+        (200_001, False, (2.0, 15.0, 0.2)),
+        (2_000_000, False, (4.0, 30.0, None)),  # highest crossed tier wins
+    ],
+)
+def test_rates_for_picks_the_highest_crossed_tier(prompt_tokens, inclusive, rates):
+    assert _tiered(threshold_inclusive=inclusive).rates_for(prompt_tokens) == rates
+
+
+def test_estimate_cost_bills_the_whole_request_at_the_tier_rate(monkeypatch):
+    monkeypatch.setattr("actllminfer.pricing.get_price", lambda model, provider=None: _tiered())
+    assert estimate_cost("m", 100_000, 1_000) == pytest.approx(0.1 + 0.01)
+    assert estimate_cost("m", 300_000, 1_000) == pytest.approx(0.6 + 0.015)
+    # Cached tokens count towards the threshold and use the tier's cache rate.
+    assert estimate_cost("m", 300_000, 0, cached_prompt_tokens=100_000) == pytest.approx(0.4 + 0.02)
+    # A tier with no cache rate bills cached tokens at its input rate.
+    assert estimate_cost("m", 2_000_000, 0, cached_prompt_tokens=1_000_000) == pytest.approx(8.0)
+
+
+def test_bundled_table_keeps_tiers_and_inclusive_providers():
+    pro = get_price("gemini/gemini-2.5-pro")
+    assert pro.context_tiers and pro.context_tiers[0].above_tokens == 200_000
+    assert get_price("xai/grok-4.20").threshold_inclusive
+    assert get_price("dashscope/qwen3-max") is not None
+
+
+# ---------------------------------------------------------------------------
+# Every stored field is compared
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "extra",
+    [
+        {"cache_read_input_token_cost": 5e-7},
+        {"max_input_tokens": 2_000_000},
+        {"deprecation_date": "2027-01-01"},
+        {"supports_vision": True},
+        {"input_cost_per_token_above_200k_tokens": 10e-6},
+    ],
+)
+def test_non_price_changes_are_changes(tmp_path, extra):
+    source, out = tmp_path / "litellm.json", tmp_path / "prices.json"
+    args = ["--source", str(source), "--output", str(out), "--as-of", "2026-10-22"]
+    source.write_text(json.dumps({"gpt-5.5": _entry("openai", 5, 30)}))
+    assert update_prices.main(args) == 0
+    source.write_text(json.dumps({"gpt-5.5": _entry("openai", 5, 30, **extra)}))
+    assert update_prices.main([*args, "--check"]) == 1
+    assert update_prices.main(args) == 0
+    assert update_prices.main([*args, "--check"]) == 0  # rewritten, now current
+
+
+def test_diff_names_the_changed_field():
+    old = update_prices.build({"gpt-5.5": _entry("openai", 5, 30)}, as_of="2026-10-22", source="t")
+    new = update_prices.build(
+        {"gpt-5.5": _entry("openai", 5, 30, cache_read_input_token_cost=5e-7)}, as_of="2026-10-22", source="t"
+    )
+    assert update_prices.diff(old, new) == ["changed  openai/gpt-5.5: cache_read_per_mtok None -> 0.5"]
