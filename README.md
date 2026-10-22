@@ -14,6 +14,33 @@ Integrated LLM inference engine with a **LangChain-Core-style** interface. One s
 | Anthropic | `ChatAnthropic` | `claude-sonnet-4-6` | `ANTHROPIC_API_KEY` |
 | Hugging Face | `ChatHuggingFace` | `Hythcliff/canadian-address-checker-on` | `HF_TOKEN` (or `HUGGINGFACEHUB_API_TOKEN`) |
 | NVIDIA NIM | `ChatNVIDIA` | `meta/llama-3.3-70b-instruct` | `NVIDIA_API_KEY` (or `NGC_API_KEY`) |
+## Model prices
+
+`actllminfer.pricing` holds each provider's official list price per million
+tokens, for the providers above plus reference prices for Google, xAI,
+Mistral, Cohere and Alibaba (which ActLLMInfer has no client for yet). It is
+the price source for routers built on ActLLMInfer, such as ActRouter.
+
+```python
+from actllminfer.pricing import get_price, estimate_cost
+
+get_price("anthropic/claude-sonnet-4-6")      # ModelPrice(input_per_mtok=3.0, output_per_mtok=15.0, ...)
+get_price("glm-4.6").provider                 # "zhipuai" (inferred, like init_chat_model)
+estimate_cost("openai/gpt-5-mini", prompt_tokens=1200, completion_tokens=300)  # 0.0009
+```
+
+The table is regenerated from LiteLLM's price data, read at each provider's
+own route (never a reseller's). Models that disappear upstream or pass their
+deprecation date are dropped, and new ones are added:
+
+```bash
+python scripts/update_prices.py            # rewrite actllminfer/data/model_prices.json
+python scripts/update_prices.py --check    # exit 1 if the bundled table is out of date
+```
+
+NVIDIA NIM and Hugging Face publish no per-token list prices, so their
+models have no entry and `get_price` returns `None`.
+
 ## Install
 
 ```bash
