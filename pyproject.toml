@@ -32,6 +32,9 @@ dev = ["pytest>=7.0", "httpx>=0.25"]
 Homepage = "https://github.com/jzhng105/actllminfer"
 Source = "https://github.com/jzhng105/actllminfer"
 
+[tool.setuptools.package-data]
+actllminfer = ["data/*.json"]
+
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["actllminfer*"]
