@@ -20,6 +20,7 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import json
+import re
 import sys
 import urllib.request
 from pathlib import Path
@@ -50,8 +51,79 @@ PROVIDERS: dict[str, tuple[str, str, Optional[str]]] = {
 # no entries; see actllminfer.pricing for how callers treat that.
 
 
+#: providers whose long-context rate applies once the prompt *reaches* the
+#: threshold rather than exceeds it (LiteLLM's ``_INCLUSIVE_THRESHOLD_PROVIDERS``)
+INCLUSIVE_THRESHOLDS = frozenset({"xai"})
+
+#: standard-tier long-context rates, e.g. ``input_cost_per_token_above_200k_tokens``;
+#: ``_batches`` / ``_priority`` / ``_flex`` variants are other service tiers
+_THRESHOLD_KEY = re.compile(
+    r"^(input_cost_per_token|output_cost_per_token|cache_read_input_token_cost)"
+    r"_above_(\d+)(k?)_tokens$"
+)
+_RATE_FIELD = {
+    "input_cost_per_token": "input_per_mtok",
+    "output_cost_per_token": "output_per_mtok",
+    "cache_read_input_token_cost": "cache_read_per_mtok",
+}
+
+
 def _mtok(per_token: Any) -> Optional[float]:
     return None if per_token is None else round(float(per_token) * 1e6, 6)
+
+
+def _rates(e: dict[str, Any]) -> Optional[tuple[dict[str, float], list[dict[str, Any]]]]:
+    """(base rates, context tiers) in USD per Mtok, or None if unpriced.
+
+    LiteLLM states long-context pricing two ways, both all-or-nothing per
+    request -- once the prompt crosses a threshold, every token in it is
+    billed at that tier's rates:
+
+    * ``*_above_{N}k_tokens`` fields next to the base rates;
+    * a ``tiered_pricing`` list of token ``range``s (Alibaba), which also
+      carries the base rate: the first range is the base, the rest are tiers.
+    """
+    tiers_by_threshold: dict[int, dict[str, Any]] = {}
+    tiered = e.get("tiered_pricing")
+    if isinstance(tiered, list) and tiered:
+        ranges = sorted(
+            (t for t in tiered if len(t.get("range") or []) == 2
+             and t.get("input_cost_per_token") is not None and t.get("output_cost_per_token") is not None),
+            key=lambda t: t["range"][0],
+        )
+        if not ranges:
+            return None
+        first, rest = ranges[0], ranges[1:]
+        base = {
+            "input_per_mtok": _mtok(first["input_cost_per_token"]),
+            "output_per_mtok": _mtok(first["output_cost_per_token"]),
+            "cache_read_per_mtok": _mtok(first.get("cache_read_input_token_cost", e.get("cache_read_input_token_cost"))),
+        }
+        for t in rest:
+            tiers_by_threshold[int(t["range"][0])] = {
+                field: _mtok(t.get(key)) for key, field in _RATE_FIELD.items()
+            }
+    else:
+        if e.get("input_cost_per_token") is None or e.get("output_cost_per_token") is None:
+            return None
+        base = {field: _mtok(e.get(key)) for key, field in _RATE_FIELD.items()}
+        for key, value in e.items():
+            match = _THRESHOLD_KEY.match(key)
+            if match and value is not None:
+                threshold = int(match.group(2)) * (1000 if match.group(3) else 1)
+                tiers_by_threshold.setdefault(threshold, {})[_RATE_FIELD[match.group(1)]] = _mtok(value)
+    tiers = []
+    for threshold in sorted(tiers_by_threshold):
+        rates = tiers_by_threshold[threshold]
+        tier = {
+            "above_tokens": threshold,
+            # A rate a tier does not restate stays at the base rate, as in LiteLLM.
+            "input_per_mtok": rates.get("input_per_mtok") if rates.get("input_per_mtok") is not None else base["input_per_mtok"],
+            "output_per_mtok": rates.get("output_per_mtok") if rates.get("output_per_mtok") is not None else base["output_per_mtok"],
+            "cache_read_per_mtok": rates.get("cache_read_per_mtok") if rates.get("cache_read_per_mtok") is not None else base["cache_read_per_mtok"],
+        }
+        tiers.append({k: v for k, v in tier.items() if v is not None})
+    return {k: v for k, v in base.items() if v is not None}, tiers
 
 
 def build(litellm: dict[str, Any], as_of: str, source: str) -> dict[str, Any]:
@@ -59,8 +131,10 @@ def build(litellm: dict[str, Any], as_of: str, source: str) -> dict[str, Any]:
     for key, e in litellm.items():
         if not isinstance(e, dict) or e.get("mode") != "chat":
             continue
-        if e.get("input_cost_per_token") is None or e.get("output_cost_per_token") is None:
+        priced = _rates(e)
+        if priced is None:
             continue
+        base, tiers = priced
         if e.get("deprecation_date") and str(e["deprecation_date"]) < as_of:
             continue  # retired: listed upstream, but no longer callable
         for provider, (lit_provider, prefix, _) in PROVIDERS.items():
@@ -72,9 +146,8 @@ def build(litellm: dict[str, Any], as_of: str, source: str) -> dict[str, Any]:
             entry = {
                 "provider": provider,
                 "model": model,
-                "input_per_mtok": _mtok(e["input_cost_per_token"]),
-                "output_per_mtok": _mtok(e["output_cost_per_token"]),
-                "cache_read_per_mtok": _mtok(e.get("cache_read_input_token_cost")),
+                **base,
+                "context_tiers": tiers or None,
                 "context_window": e.get("max_input_tokens"),
                 "max_output_tokens": e.get("max_output_tokens"),
                 "supports_tools": bool(e.get("supports_function_calling")),
@@ -90,11 +163,15 @@ def build(litellm: dict[str, Any], as_of: str, source: str) -> dict[str, Any]:
                 models[(provider, model.lower())] = entry
             break
     return {
-        "schema_version": 1,
+        "schema_version": 2,  # 2: context_tiers, providers.*.threshold_inclusive
         "as_of": as_of,
         "source": source,
         "providers": {
-            name: {"client": client, "litellm_provider": lit}
+            name: {
+                "client": client,
+                "litellm_provider": lit,
+                "threshold_inclusive": lit in INCLUSIVE_THRESHOLDS,
+            }
             for name, (lit, _, client) in PROVIDERS.items()
         },
         "models": [models[k] for k in sorted(models)],
@@ -106,15 +183,24 @@ def diff(old: dict[str, Any], new: dict[str, Any]) -> list[str]:
         return {f"{m['provider']}/{m['model']}": m for m in table.get("models", [])}
 
     before, after = index(old), index(new)
-    lines = [f"added    {k}" for k in sorted(set(after) - set(before))]
+    lines = []
+    for field in ("schema_version", "providers"):
+        if old.get(field) != new.get(field):
+            lines.append(f"format   {field} changed")
+    lines += [f"added    {k}" for k in sorted(set(after) - set(before))]
     lines += [f"removed  {k}" for k in sorted(set(before) - set(after))]
+    # Every stored field counts: a cache-rate, tier, context-window,
+    # deprecation-date or capability change must reach the table too.
     for k in sorted(set(before) & set(after)):
         a, b = before[k], after[k]
-        if (a["input_per_mtok"], a["output_per_mtok"]) != (b["input_per_mtok"], b["output_per_mtok"]):
+        if (a.get("input_per_mtok"), a.get("output_per_mtok")) != (b.get("input_per_mtok"), b.get("output_per_mtok")):
             lines.append(
-                f"price    {k}: {a['input_per_mtok']}/{a['output_per_mtok']} -> "
-                f"{b['input_per_mtok']}/{b['output_per_mtok']}"
+                f"price    {k}: {a.get('input_per_mtok')}/{a.get('output_per_mtok')} -> "
+                f"{b.get('input_per_mtok')}/{b.get('output_per_mtok')}"
             )
+        for field in sorted((set(a) | set(b)) - {"provider", "model", "input_per_mtok", "output_per_mtok"}):
+            if a.get(field) != b.get(field):
+                lines.append(f"changed  {k}: {field} {a.get(field)!r} -> {b.get(field)!r}")
     return lines
 
 
